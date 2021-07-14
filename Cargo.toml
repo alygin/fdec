@@ -8,7 +8,7 @@ categories = ["data-structures", "algorithms", "mathematics"]
 license = "MIT"
 repository = "https://github.com/alygin/fdec"
 homepage = "https://github.com/alygin/fdec"
-readme = "https://github.com/alygin/fdec/blob/main/README.md"
+readme = "README.md"
 
 [dependencies]
 lazy_static = "1.4"
