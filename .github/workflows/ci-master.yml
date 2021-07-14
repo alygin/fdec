@@ -1,0 +1,28 @@
+name: CI-master
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '50 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  build_and_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
