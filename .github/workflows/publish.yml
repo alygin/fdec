@@ -28,11 +28,12 @@ jobs:
         with:
           command: build
           args: --release --all-features
-      - name: Publish
+      - name: Login to crates.io
         uses: actions-rs/cargo@v1
         with:
           command: login
           args: ${{ secrets.CRATES_IO_TOKEN }}
+      - name: Publish
         uses: actions-rs/cargo@v1
         with:
           command: publish
