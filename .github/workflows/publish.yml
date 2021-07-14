@@ -1,0 +1,39 @@
+name: Publish
+
+on: workflow_dispatch
+
+jobs:
+  build_and_check:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+      - name: Check Formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all-features
+      - name: Publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_IO_TOKEN }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --dry-run
