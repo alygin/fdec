@@ -1,12 +1,8 @@
-name: CI-main
+name: CI-pr
 
 on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '50 1 * * *'
-  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   build_and_check:
