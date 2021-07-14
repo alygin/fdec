@@ -1,9 +1,9 @@
-name: CI-master
+name: CI-main
 
 on:
   push:
     branches:
-      - master
+      - main
   schedule:
     - cron: '50 1 * * *'
   workflow_dispatch:
