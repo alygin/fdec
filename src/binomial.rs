@@ -44,3 +44,23 @@ impl Iterator for Binomial {
         Some(c)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Binomial;
+
+    #[test]
+    fn test_binomial() {
+        assert_binomial(0, &[1]);
+        assert_binomial(1, &[1, 1]);
+        assert_binomial(2, &[1, 2, 1]);
+        assert_binomial(3, &[1, 3, 3, 1]);
+        assert_binomial(4, &[1, 4, 6, 4, 1]);
+        assert_binomial(5, &[1, 5, 10, 10, 5, 1]);
+    }
+
+    fn assert_binomial(n: u32, expect: &[u64]) {
+        let v: Vec<u64> = Binomial::new(n).collect();
+        assert_eq!(v, expect);
+    }
+}
