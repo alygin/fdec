@@ -73,8 +73,76 @@ mod basic {
             "2.7182818284590452353602875"
         );
         assert_eq!(
+            super::decimal::consts::FRAC_1_PI.to_string(),
+            "0.3183098861837906715377675"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_1_SQRT_2.to_string(),
+            "0.7071067811865475244008444"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_2_PI.to_string(),
+            "0.6366197723675813430755351"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_2_SQRT_PI.to_string(),
+            "1.1283791670955125738961589"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_PI_2.to_string(),
+            "1.5707963267948966192313217"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_PI_3.to_string(),
+            "1.0471975511965977461542145"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_PI_4.to_string(),
+            "0.7853981633974483096156608"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_PI_6.to_string(),
+            "0.5235987755982988730771072"
+        );
+        assert_eq!(
+            super::decimal::consts::FRAC_PI_8.to_string(),
+            "0.3926990816987241548078304"
+        );
+        assert_eq!(
+            super::decimal::consts::LN_2.to_string(),
+            "0.6931471805599453094172321"
+        );
+        assert_eq!(
+            super::decimal::consts::LN_10.to_string(),
+            "2.3025850929940456840179915"
+        );
+        assert_eq!(
+            super::decimal::consts::LOG2_10.to_string(),
+            "3.3219280948873623478703194"
+        );
+        assert_eq!(
+            super::decimal::consts::LOG2_E.to_string(),
+            "1.4426950408889634073599247"
+        );
+        assert_eq!(
+            super::decimal::consts::LOG10_2.to_string(),
+            "0.3010299956639811952137389"
+        );
+        assert_eq!(
+            super::decimal::consts::LOG10_E.to_string(),
+            "0.4342944819032518276511289"
+        );
+        assert_eq!(
             super::decimal::consts::PI.to_string(),
             "3.1415926535897932384626434"
+        );
+        assert_eq!(
+            super::decimal::consts::SQRT_2.to_string(),
+            "1.4142135623730950488016887"
+        );
+        assert_eq!(
+            super::decimal::consts::TAU.to_string(),
+            "6.2831853071795864769252868"
         );
     }
 

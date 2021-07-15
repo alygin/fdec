@@ -63,27 +63,44 @@ macro_rules! fdec {
             use super::*;
             lazy_static! {
                 /// Euler's number (e)
-                pub static ref E: $name = {
-                    parse_str_with_scale(
-                        "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785\
-                        2516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988\
-                        0753195251019011573834187930702154089149934884167509244761460668082264800168477411853742345442\
-                        4371075390777449920695517027618386062613313845830007520449338265602976067371132007093287091274\
-                        4374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794\
-                        686445490598793163688923009879312"
-                    )
-                };
+                pub static ref E: $name = parse_str_with_scale(fdec::consts::E);
+                /// 1/π
+                pub static ref FRAC_1_PI: $name = parse_str_with_scale(fdec::consts::FRAC_1_PI);
+                /// 1/sqrt(2)
+                pub static ref FRAC_1_SQRT_2: $name = parse_str_with_scale(fdec::consts::FRAC_1_SQRT_2);
+                /// 2/π
+                pub static ref FRAC_2_PI: $name = parse_str_with_scale(fdec::consts::FRAC_2_PI);
+                /// 2/sqrt(π)
+                pub static ref FRAC_2_SQRT_PI: $name = parse_str_with_scale(fdec::consts::FRAC_2_SQRT_PI);
+                /// π/2
+                pub static ref FRAC_PI_2: $name = parse_str_with_scale(fdec::consts::FRAC_PI_2);
+                /// π/3
+                pub static ref FRAC_PI_3: $name = parse_str_with_scale(fdec::consts::FRAC_PI_3);
+                /// π/4
+                pub static ref FRAC_PI_4: $name = parse_str_with_scale(fdec::consts::FRAC_PI_4);
+                /// π/6
+                pub static ref FRAC_PI_6: $name = parse_str_with_scale(fdec::consts::FRAC_PI_6);
+                /// π/8
+                pub static ref FRAC_PI_8: $name =  parse_str_with_scale(fdec::consts::FRAC_PI_8);
+                /// ln(2)
+                pub static ref LN_2: $name = parse_str_with_scale(fdec::consts::LN_2);
+                /// ln(10)
+                pub static ref LN_10: $name = parse_str_with_scale(fdec::consts::LN_10);
+                /// log<sub>2</sub>(10)
+                pub static ref LOG2_10: $name = parse_str_with_scale(fdec::consts::LOG2_10);
+                /// log<sub>2</sub>(e)
+                pub static ref LOG2_E: $name =  parse_str_with_scale(fdec::consts::LOG2_E);
+                /// log<sub>10</sub>(2)
+                pub static ref LOG10_2: $name =  parse_str_with_scale(fdec::consts::LOG10_2);
+                /// log<sub>10</sub>(e)
+                pub static ref LOG10_E: $name = parse_str_with_scale(fdec::consts::LOG10_E);
                 /// Archimedes’ constant (π)
-                pub static ref PI: $name = {
-                    parse_str_with_scale(
-                        "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253\
-                        4211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462\
-                        2948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648\
-                        2133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488\
-                        2046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956\
-                        735188575272489122793818301194913"
-                    )
-                };
+                pub static ref PI: $name = parse_str_with_scale(fdec::consts::PI);
+                /// sqrt(2)
+                pub static ref SQRT_2: $name = parse_str_with_scale(fdec::consts::SQRT_2);
+                /// The full circle constant (τ)
+                /// Equal to 2π
+                pub static ref TAU: $name = parse_str_with_scale(fdec::consts::TAU);
             }
 
             // Converts the given string to a number with half-up rounding to the type scale.

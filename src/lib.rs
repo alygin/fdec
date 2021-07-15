@@ -73,6 +73,8 @@ pub use lazy_static::*;
 
 #[cfg(test)]
 mod binomial;
+#[doc(hidden)]
+pub mod consts;
 mod number;
 mod prim;
 
