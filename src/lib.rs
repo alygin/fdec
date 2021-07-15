@@ -8,8 +8,9 @@
 //! - supports arithmetic operations: `+`, `-`, `*`, `/`, `%`, `<<`, `>>`,
 //! - comes with mathematical functions: `abs()`, `powi()`, `sqrt()`,
 //! - has special values NaN and ±Infinity, and uses them instead of panicing,
+//! - provides basic mathematical constants,
 //! - seamlessly interacts with Rust's primitive types,
-//! - doesn't use heap allocations for math operations.
+//! - creates values and performs math operations on stack, avoiding heap allocations.
 //!
 //! # Usage
 //!
@@ -73,6 +74,8 @@ pub use lazy_static::*;
 
 #[cfg(test)]
 mod binomial;
+#[doc(hidden)]
+pub mod consts;
 mod number;
 mod prim;
 
@@ -120,9 +123,6 @@ pub trait Number:
 
     /// Returns the smallest positive value.
     fn ulp() -> Self;
-
-    /// Returns the `e` constant.
-    fn e() -> Self;
 
     /// Returns the largest normal value.
     fn max() -> Self;

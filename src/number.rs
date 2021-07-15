@@ -55,14 +55,72 @@ macro_rules! fdec {
         lazy_static! {
             static ref ULP: $name = { $name::from_unit(false, 1, $scale) };
             static ref ONE: $name = { $name::from_unit(false, 1, 0) };
-            static ref E: $name = {
-                const E_STR: &'static str = "2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794686445490598793163688923009879312";
-                if $name::SCALE == 0 {
-                    $name::from(2)
-                } else {
-                    $name::from_str(&E_STR[..2+$name::SCALE]).unwrap()
+        }
+
+        /// Basic mathematical constants.
+        pub mod consts {
+            use std::str::FromStr;
+            use super::*;
+            lazy_static! {
+                /// Euler's number (e)
+                pub static ref E: $name = parse_str_with_scale(fdec::consts::E);
+                /// 1/π
+                pub static ref FRAC_1_PI: $name = parse_str_with_scale(fdec::consts::FRAC_1_PI);
+                /// 1/sqrt(2)
+                pub static ref FRAC_1_SQRT_2: $name = parse_str_with_scale(fdec::consts::FRAC_1_SQRT_2);
+                /// 2/π
+                pub static ref FRAC_2_PI: $name = parse_str_with_scale(fdec::consts::FRAC_2_PI);
+                /// 2/sqrt(π)
+                pub static ref FRAC_2_SQRT_PI: $name = parse_str_with_scale(fdec::consts::FRAC_2_SQRT_PI);
+                /// π/2
+                pub static ref FRAC_PI_2: $name = parse_str_with_scale(fdec::consts::FRAC_PI_2);
+                /// π/3
+                pub static ref FRAC_PI_3: $name = parse_str_with_scale(fdec::consts::FRAC_PI_3);
+                /// π/4
+                pub static ref FRAC_PI_4: $name = parse_str_with_scale(fdec::consts::FRAC_PI_4);
+                /// π/6
+                pub static ref FRAC_PI_6: $name = parse_str_with_scale(fdec::consts::FRAC_PI_6);
+                /// π/8
+                pub static ref FRAC_PI_8: $name =  parse_str_with_scale(fdec::consts::FRAC_PI_8);
+                /// ln(2)
+                pub static ref LN_2: $name = parse_str_with_scale(fdec::consts::LN_2);
+                /// ln(10)
+                pub static ref LN_10: $name = parse_str_with_scale(fdec::consts::LN_10);
+                /// log<sub>2</sub>(10)
+                pub static ref LOG2_10: $name = parse_str_with_scale(fdec::consts::LOG2_10);
+                /// log<sub>2</sub>(e)
+                pub static ref LOG2_E: $name =  parse_str_with_scale(fdec::consts::LOG2_E);
+                /// log<sub>10</sub>(2)
+                pub static ref LOG10_2: $name =  parse_str_with_scale(fdec::consts::LOG10_2);
+                /// log<sub>10</sub>(e)
+                pub static ref LOG10_E: $name = parse_str_with_scale(fdec::consts::LOG10_E);
+                /// Archimedes’ constant (π)
+                pub static ref PI: $name = parse_str_with_scale(fdec::consts::PI);
+                /// sqrt(2)
+                pub static ref SQRT_2: $name = parse_str_with_scale(fdec::consts::SQRT_2);
+                /// The full circle constant (τ)
+                /// Equal to 2π
+                pub static ref TAU: $name = parse_str_with_scale(fdec::consts::TAU);
+            }
+
+            // Converts the given string to a number with half-up rounding to the type scale.
+            fn parse_str_with_scale(str: &str) -> $name {
+                let dot_pos = str.find('.').unwrap();
+                if $name::SCALE >= str.len() - dot_pos {
+                    // Source string has no more digits than we need, only return what we have
+                    return $name::from_str(str).unwrap();
                 }
-            };
+                let frac_end = dot_pos + $name::SCALE;
+                let mut result = $name::from_str(&str[..frac_end+1]).unwrap();
+                // If the next digit is >= 5, round the number up
+                let next_char_pos = if $name::SCALE == 0 { dot_pos + 1 } else { dot_pos + 1 + $name::SCALE };
+                let next_char = str.chars().nth(next_char_pos).unwrap();
+                let next_digit = next_char.to_digit(10).unwrap();
+                if next_digit >= 5 {
+                    result = result + $name::ulp();
+                }
+                result
+            }
         }
 
         /// A fixed-size fixed-point numeric type.
@@ -89,11 +147,6 @@ macro_rules! fdec {
             #[inline(always)]
             fn one() -> Self {
                 *ONE
-            }
-
-            #[inline(always)]
-            fn e() -> Self {
-                *E
             }
 
             #[inline(always)]
