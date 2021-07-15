@@ -210,7 +210,7 @@ pub enum ParseNumberError {
 ///
 /// ```
 /// # #[macro_use] extern crate fdec;
-/// fdec8! {           // Use 8-bit units as building blocks
+/// fdec8! {          // Use 8-bit units as building blocks
 ///     module int,   // Name of the module that will contain all the generated code
 ///     name Int,     // Name of the numeric type to be generated
 ///     length 10     // 80-bit number (10 * 8-bit units)
@@ -243,7 +243,7 @@ macro_rules! fdec8 {
 ///
 /// ```
 /// # #[macro_use] extern crate fdec;
-/// fdec16! {              // Use 16-bit units as building blocks
+/// fdec16! {             // Use 16-bit units as building blocks
 ///     module decimal,   // Name of the module that will contain all the generated code
 ///     name Dec,         // Name of the numeric type to be generated
 ///     length 6,         // 96-bit number (6 * 16-bit units)
@@ -320,7 +320,7 @@ macro_rules! fdec16 {
 ///
 /// ```
 /// # #[macro_use] extern crate fdec;
-/// fdec32! {          // Use 32-bit units as building blocks
+/// fdec32! {         // Use 32-bit units as building blocks
 ///     module int,   // Name of the module that will contain all the generated code
 ///     name Int,     // Name of the numeric type to be generated
 ///     length 4      // 128-bit number (4 * 32-bit units)
@@ -375,7 +375,7 @@ macro_rules! fdec32 {
 ///
 /// ```
 /// # #[macro_use] extern crate fdec;
-/// fdec64! {          // Use 64-bit units as building blocks
+/// fdec64! {         // Use 64-bit units as building blocks
 ///     module int,   // Name of the module that will contain all the generated code
 ///     name Int,     // Name of the numeric type to be generated
 ///     length 5      // 320-bit number (5 * 64-bit units)
