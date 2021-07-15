@@ -55,14 +55,55 @@ macro_rules! fdec {
         lazy_static! {
             static ref ULP: $name = { $name::from_unit(false, 1, $scale) };
             static ref ONE: $name = { $name::from_unit(false, 1, 0) };
-            static ref E: $name = {
-                const E_STR: &'static str = "2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794686445490598793163688923009879312";
-                if $name::SCALE == 0 {
-                    $name::from(2)
-                } else {
-                    $name::from_str(&E_STR[..2+$name::SCALE]).unwrap()
+        }
+
+        /// Basic mathematical constants.
+        pub mod consts {
+            use std::str::FromStr;
+            use super::*;
+            lazy_static! {
+                /// Euler's number (e)
+                pub static ref E: $name = {
+                    parse_str_with_scale(
+                        "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785\
+                        2516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988\
+                        0753195251019011573834187930702154089149934884167509244761460668082264800168477411853742345442\
+                        4371075390777449920695517027618386062613313845830007520449338265602976067371132007093287091274\
+                        4374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794\
+                        686445490598793163688923009879312"
+                    )
+                };
+                /// Archimedes’ constant (π)
+                pub static ref PI: $name = {
+                    parse_str_with_scale(
+                        "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253\
+                        4211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462\
+                        2948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648\
+                        2133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488\
+                        2046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956\
+                        735188575272489122793818301194913"
+                    )
+                };
+            }
+
+            // Converts the given string to a number with half-up rounding to the type scale.
+            fn parse_str_with_scale(str: &str) -> $name {
+                let dot_pos = str.find('.').unwrap();
+                if $name::SCALE >= str.len() - dot_pos {
+                    // Source string has no more digits than we need, only return what we have
+                    return $name::from_str(str).unwrap();
                 }
-            };
+                let frac_end = dot_pos + $name::SCALE;
+                let mut result = $name::from_str(&str[..frac_end+1]).unwrap();
+                // If the next digit is >= 5, round the number up
+                let next_char_pos = if $name::SCALE == 0 { dot_pos + 1 } else { dot_pos + 1 + $name::SCALE };
+                let next_char = str.chars().nth(next_char_pos).unwrap();
+                let next_digit = next_char.to_digit(10).unwrap();
+                if next_digit >= 5 {
+                    result = result + $name::ulp();
+                }
+                result
+            }
         }
 
         /// A fixed-size fixed-point numeric type.
@@ -89,11 +130,6 @@ macro_rules! fdec {
             #[inline(always)]
             fn one() -> Self {
                 *ONE
-            }
-
-            #[inline(always)]
-            fn e() -> Self {
-                *E
             }
 
             #[inline(always)]

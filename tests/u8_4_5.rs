@@ -87,5 +87,6 @@ fn test_to_string() {
 
 #[test]
 fn test_constants() {
-    assert_eq!(Decimal::e().to_string(), "2.71828");
+    assert_eq!(dec::consts::E.to_string(), "2.71828");
+    assert_eq!(dec::consts::PI.to_string(), "3.14159");
 }

@@ -8,7 +8,7 @@ fdec32! {
     scale 25
 }
 
-use decimal::Decimal;
+use decimal::*;
 
 fn test_str(d: Decimal, expected: &str) {
     assert_eq!(d.to_string(), expected);
@@ -68,7 +68,14 @@ mod basic {
 
     #[test]
     fn test_constants() {
-        assert_eq!(Decimal::e().to_string(), "2.7182818284590452353602874");
+        assert_eq!(
+            super::decimal::consts::E.to_string(),
+            "2.7182818284590452353602875"
+        );
+        assert_eq!(
+            super::decimal::consts::PI.to_string(),
+            "3.1415926535897932384626434"
+        );
     }
 
     #[test]

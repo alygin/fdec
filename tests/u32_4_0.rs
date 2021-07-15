@@ -33,5 +33,6 @@ fn test_macro() {
 
 #[test]
 fn test_constants() {
-    assert_eq!(Int::e(), Int::from(2));
+    assert_eq!(*int::consts::E, Int::from(3));
+    assert_eq!(*int::consts::PI, Int::from(3));
 }

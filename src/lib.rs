@@ -121,9 +121,6 @@ pub trait Number:
     /// Returns the smallest positive value.
     fn ulp() -> Self;
 
-    /// Returns the `e` constant.
-    fn e() -> Self;
-
     /// Returns the largest normal value.
     fn max() -> Self;
 
