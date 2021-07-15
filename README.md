@@ -10,8 +10,9 @@ With a simple macro call you get a type that:
 - supports arithmetic operations: `+`, `-`, `*`, `/`, `%`, `<<`, `>>`,
 - comes with mathematical functions: `abs()`, `powi()`, `sqrt()`,
 - has special values NaN and ±Infinity, and uses them instead of panicing,
+- provides basic mathematical constants,
 - seamlessly interacts with Rust's primitive types,
-- doesn't use heap allocations for math operations.
+- creates values and performs math operations on stack, avoiding heap allocations.
 
 ## Usage
 

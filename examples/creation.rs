@@ -22,6 +22,14 @@ fn main() {
     print(Decimal::max(), "Maximum");
     print(Decimal::min(), "Minimum");
 
+    println!("\nBasic math constants");
+    // Provides the same basic math constants as Rust's primitive types.
+    print(*dec::consts::E, "Euler's number");
+    print(*dec::consts::PI, "Archimedes’ constant (π)");
+    print(*dec::consts::SQRT_2, "Sqrt(2)");
+    print(*dec::consts::FRAC_1_SQRT_2, "1 / Sqrt(2)");
+    // ...and many more.
+
     println!("\nSpecial values");
     // Special values are also supported.
     print(Decimal::nan(), "Not a number");
@@ -65,12 +73,12 @@ fn main() {
 }
 
 fn print(n: Decimal, name: &str) {
-    println!("  {:20}: {}", name, n);
+    println!("  {:25}: {}", name, n);
 }
 
 fn print_result(res: Result<Decimal, ParseNumberError>, name: &str) {
     match res {
-        Ok(n) => println!("  {:20}: {}", name, n),
-        Err(e) => println!("  {:20}: {:?}", name, e),
+        Ok(n) => println!("  {:25}: {}", name, n),
+        Err(e) => println!("  {:25}: {:?}", name, e),
     }
 }
