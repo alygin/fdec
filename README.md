@@ -20,7 +20,7 @@ First, add the dependency on `fdec` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-fdec = "0.1"
+fdec = "0.2"
 ```
 
 Second, import it at your crate's root with the `macro_use` attribute:
