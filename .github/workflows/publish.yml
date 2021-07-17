@@ -40,7 +40,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --dry-run
       - name: Create release
         uses: actions/create-release@v1
         env:
