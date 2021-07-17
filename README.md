@@ -14,27 +14,46 @@ With a simple macro call you get a type that:
 - seamlessly interacts with Rust's primitive types,
 - creates values and performs math operations on stack, avoiding heap allocations.
 
-## Usage
+## When to Use
 
-First, add the dependency on `fdec` to your `Cargo.toml`:
+You should probably give fdec a try if:
+
+- you need primitive types like `i256` or `i1408`, which Rust doesn't provide,
+- your business domain is not tolerant to representation errors that may add up during computations (like working with money in finance),
+- other libraries that provide decimal numbers are not fast enough for you when it comes to doing math,
+- you need to store lots of decimal numbers, and you'd prefer it to be memory-efficient,
+- you're just curious to see how it works.
+
+## How to Use
+
+Add the dependency on `fdec` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
 fdec = "0.2"
 ```
 
-Second, import it at your crate's root with the `macro_use` attribute:
+Import it at your crate's root with the `macro_use` attribute:
 
 ```rust
 #[macro_use]
 extern crate fdec;
 ```
 
-Now, everything is ready for adding custom numeric types to your project.
+Add custom numeric types to your project by calling `fdec*` macros:
+
+```rust
+fdec64! {               // Use 64-bit units
+    module bigdec,      // Put all the generated code into the `bigdec` module
+    name BigDec,        // The name for the generated type
+    length 5,           // 5 * 64-bit units = 320 bits to store numbers
+    scale 50            // Use 50 decimal places
+}
+```
 
 ## Example
 
-Here, we define the `Decimal` structure that represents 160-bit numbers
+Here we define the `Decimal` structure that represents 160-bit numbers
 with 30 decimal places.
 
 ```rust
