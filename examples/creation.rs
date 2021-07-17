@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate fdec;
 
+// 160-bit numbers with 25 decimal places.
 fdec32! {
     module dec,
     name Decimal,
@@ -24,11 +25,11 @@ fn main() {
 
     println!("\nBasic math constants");
     // Provides the same basic math constants as Rust's primitive types.
-    print(*dec::consts::E, "Euler's number");
+    print(*dec::consts::E, "Euler's number (e)");
     print(*dec::consts::PI, "Archimedes’ constant (π)");
     print(*dec::consts::SQRT_2, "Sqrt(2)");
     print(*dec::consts::FRAC_1_SQRT_2, "1 / Sqrt(2)");
-    // ...and many more.
+    println!("...and many more.");
 
     println!("\nSpecial values");
     // Special values are also supported.
@@ -79,6 +80,55 @@ fn print(n: Decimal, name: &str) {
 fn print_result(res: Result<Decimal, ParseNumberError>, name: &str) {
     match res {
         Ok(n) => println!("  {:25}: {}", name, n),
-        Err(e) => println!("  {:25}: {:?}", name, e),
+        Err(e) => println!("  {:25}: Error: {:?}", name, e),
     }
 }
+
+/* =================== Output ===================
+
+Predefined constants
+  Zero                     : 0
+  Ulp                      : 0.0000000000000000000000001
+  One                      : 1
+  Maximum                  : 146150163733090291820368.4832716283019655932542975
+  Minimum                  : -146150163733090291820368.4832716283019655932542975
+
+Basic math constants
+  Euler's number (e)       : 2.7182818284590452353602875
+  Archimedes’ constant (π) : 3.1415926535897932384626434
+  Sqrt(2)                  : 1.4142135623730950488016887
+  1 / Sqrt(2)              : 0.7071067811865475244008444
+...and many more.
+
+Special values
+  Not a number             : NaN
+  +Infinity                : Infinity
+  -Infinity                : -Infinity
+
+From primitives
+  One                      : 1
+  Minus ten                : -10
+  Quarter                  : 0.25
+  10^25 is too big         : Infinity
+  Coerced 7                : 7
+  Two from macro           : 2
+
+From primitives with scaling
+  Half                     : 0.5
+  One percent              : 0.01
+  72 * 10^(-20)            : 0.00000000000000000072
+  1.2 from macro           : 1.2
+
+From strings
+  Billion                  : 1000000000
+  Three quaters            : 0.75
+  -3%                      : -0.03
+  10^25 is too big         : Error: Overflow
+  Foo                      : Error: InvalidFormat
+
+Negation
+  -Ulp                     : -0.0000000000000000000000001
+  Minus ten                : -10
+  -0 is 0                  : 0
+
+==============================================*/
