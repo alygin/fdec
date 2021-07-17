@@ -223,6 +223,7 @@ macro_rules! fdec8 {
         fdec8!(module $modname, name $name, length $mlen, scale 0);
     };
     (module $modname:ident, name $name:ident, length $mlen:expr, scale $scale:expr) => {
+        /// Module that contains the generated numeric type
         #[allow(non_upper_case_globals)]
         #[macro_use]
         pub mod $modname {
@@ -278,6 +279,7 @@ macro_rules! fdec16 {
         fdec16!(module $modname, name $name, length $mlen, scale 0);
     };
     (module $modname:ident, name $name:ident, length $mlen:expr, scale $scale:expr) => {
+        /// Module that contains the generated numeric type
         #[allow(non_upper_case_globals)]
         #[macro_use]
         pub mod $modname {
@@ -333,6 +335,7 @@ macro_rules! fdec32 {
         fdec32!(module $modname, name $name, length $mlen, scale 0);
     };
     (module $modname:ident, name $name:ident, length $mlen:expr, scale $scale:expr) => {
+        /// Module that contains the generated numeric type
         #[allow(non_upper_case_globals)]
         #[macro_use]
         pub mod $modname {
@@ -388,6 +391,7 @@ macro_rules! fdec64 {
         fdec64!(module $modname, name $name, length $mlen, scale 0);
     };
     (module $modname:ident, name $name:ident, length $mlen:expr, scale $scale:expr) => {
+        /// Module that contains the generated numeric type
         #[allow(non_upper_case_globals)]
         #[macro_use]
         pub mod $modname {

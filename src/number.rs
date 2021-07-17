@@ -1324,6 +1324,7 @@ macro_rules! fdec {
         impl_float_primitive_interop!($name, f64, f64);
         impl_unit_primitive_interop!($name, u8, i8, i8);
 
+        /// Macro for creating number values from other types
         #[macro_export]
         macro_rules! $modname {
             ($e:expr) => { $name::from($e) };
