@@ -12,7 +12,7 @@ jobs:
           toolchain: stable
       - name: Get current version
         id: version
-        run: echo '::set-output name=version::$(sed -n "s/^version = \"\(.*\)\"/\1/p" < Cargo.toml)'
+        run: .github/workflows/print-version.sh
       - name: Test
         uses: actions-rs/cargo@v1
         with:
