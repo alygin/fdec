@@ -10,6 +10,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Get current version
+        id: version
+        run: echo '::set-output name=version::$(sed -n "s/^version = \"\(.*\)\"/\1/p" < Cargo.toml)'
       - name: Test
         uses: actions-rs/cargo@v1
         with:
@@ -37,3 +40,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
+          args: --dry-run
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
