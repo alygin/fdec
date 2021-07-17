@@ -1,6 +1,6 @@
 [package]
 name = "fdec"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Andrew Lygin <alygin@gmail.com>"]
 description = "A collection of macros for generating fixed-size fixed-point numeric types for Rust."
 keywords = ["numbers", "numeric", "fixed-point", "decimal", "arithmetic"]
