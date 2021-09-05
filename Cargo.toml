@@ -10,5 +10,8 @@ repository = "https://github.com/alygin/fdec"
 homepage = "https://github.com/alygin/fdec"
 readme = "README.md"
 
+[profile.dev]
+debug = 0
+
 [dependencies]
 lazy_static = "1.4"

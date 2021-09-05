@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  CARGO_INCREMENTAL: 0
+
 jobs:
   build_and_check:
     runs-on: ubuntu-20.04

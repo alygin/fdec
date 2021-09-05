@@ -8,6 +8,9 @@ on:
     - cron: '50 1 * * *'
   workflow_dispatch:
 
+env:
+  CARGO_INCREMENTAL: 0
+
 jobs:
   build_and_check:
     runs-on: ubuntu-20.04
@@ -16,16 +19,14 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
+      - name: Compile
+        run: cargo test --no-run
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test -- --nocapture --quiet
       - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
+        run: cargo clippy
       - name: Check Formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+        run: cargo fmt -- --check
