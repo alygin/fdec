@@ -13,36 +13,26 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
       - name: Get current version
         id: version
         run: .github/workflows/print-version.sh
+      - name: Compile Tests
+        run: cargo test --no-run
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test -- --nocapture --quiet
       - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
+        run: cargo clippy
       - name: Check Formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+        run: cargo fmt -- --check
       - name: Build Release
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --all-features
+        run: cargo build --release --all-features
       - name: Login to crates.io
-        uses: actions-rs/cargo@v1
-        with:
-          command: login
-          args: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo login ${{ secrets.CRATES_IO_TOKEN }}
       - name: Publish
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
+        run: cargo publish
       - name: Create release
         uses: actions/create-release@v1
         env:
