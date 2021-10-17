@@ -27,16 +27,18 @@ macro_rules! fdec {
         use std::str::FromStr;
 
         #[doc(hidden)]
-        pub use $crate::{Number, WithScale, ParseNumberError, StrInfo};
+        pub use $crate::{Number, WithScale, ParseNumberError, FromBytesError, StrInfo};
 
-        const M_LENGTH: usize = $mlen;          // Length of the array (in units) that holds the number data
+        const M_LENGTH: usize = $mlen;                              // Length of the array (in units) that holds the number data
 
-        const UNIT_BITS: usize = $ubits;        // Number of bits in one unit
-        const UNIT_BASE: Unit = $ubase;         // Max power of 10 that fits into a unit
-        const UNIT_BASE_POWER: usize = $ubpow;  // Power of UNIT_BASE
+        const UNIT_BITS: usize = $ubits;                            // Number of bits in one unit
+        const UNIT_BYTES: usize = $ubits / 8;                       // Number of bytest in one unit
+        const UNIT_BASE: Unit = $ubase;                             // Max power of 10 that fits into a unit
+        const UNIT_BASE_POWER: usize = $ubpow;                      // Power of UNIT_BASE
         const UNIT_MASK: BigUnit = $umask;
+        const BYTE_ARRAY_LEN: usize = M_LENGTH * UNIT_BYTES + 1;    // Length of a byte array that can hold the number data. One extra byte is for flags.
 
-        type Flags = $unit;                     // Flags use unit type to keep struct alignment. Making it smaller doesn't make any difference at lower level.
+        type Flags = $unit;                                         // Flags use unit type to keep struct alignment. Making it smaller doesn't make any difference at lower level.
         type Unit = $unit;
         type BigUnit = $bigunit;
         type IBigUnit = $ibigunit;
@@ -127,7 +129,7 @@ macro_rules! fdec {
         #[derive(Copy, Clone)]
         pub struct $name {
             flags: Flags,
-            magnitude: [Unit; M_LENGTH],
+            magnitude: [Unit; M_LENGTH],    // Number magnitude in little-endian order
         }
 
         impl Number for $name {
@@ -291,6 +293,12 @@ macro_rules! fdec {
             }
         }
 
+        // Result of converting a byte to flags.
+        enum FlagsByteValue {
+            Special($name),     // Flags byte contains a special value flag
+            Simple(bool)        // Negative-flag value for a simple number value
+        }
+
         impl $name {
             const NAN: $name = $name { flags: FLAG_NAN, magnitude: [0; M_LENGTH] };
             const ZERO: $name = $name { flags: FLAGS_NO, magnitude: [0; M_LENGTH] };
@@ -299,11 +307,11 @@ macro_rules! fdec {
             const MIN: $name = $name { flags: FLAG_NEGATIVE, magnitude: [Unit::max_value(); M_LENGTH] };
             const MAX: $name = $name { flags: FLAGS_NO, magnitude: [Unit::max_value(); M_LENGTH] };
 
-            /// Creates a number with the given magnitude. If `neg` is `true`, a negative value
-            /// will be created. Othewise, a positive number is created.
-            #[inline(always)]
+            /// Creates a number with the given magnitude (in little-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            #[deprecated(since = "0.3", note = "Use `from_le_units()` instead")]
             pub const fn new(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
-                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
+                $name::from_le_units(neg, magnitude)
             }
 
             #[inline(always)]
@@ -314,8 +322,7 @@ macro_rules! fdec {
 
             fn from_unit(neg: bool, v: Unit, scale: usize) -> Self {
                 debug_assert!(scale <= $name::SCALE);
-
-                let mut d = $name::new(neg && v > 0, [0; M_LENGTH]);
+                let mut d = $name::from_le_units(neg && v > 0, [0; M_LENGTH]);
                 d.magnitude[0] = v;
                 let overflow = d.move_point_right($name::SCALE - scale);
                 if overflow {
@@ -325,10 +332,127 @@ macro_rules! fdec {
                 }
             }
 
+            /// Creates a number with the given magnitude (in little-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            #[inline(always)]
+            pub const fn from_le_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
+            }
+
+            /// Creates a number with the given magnitude (in big-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            pub fn from_be_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                let mut le_magnitude = magnitude;
+                le_magnitude.reverse();
+                $name::from_le_units(neg, le_magnitude)
+            }
+
+            /// Creates a number from its representation as a byte array in big-endian order.
+            pub fn from_be_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                let flags_byte = bytes[0];
+                match $name::process_flags_byte(flags_byte)? {
+                    FlagsByteValue::Special(sv) => Ok(sv),
+                    FlagsByteValue::Simple(neg) => {
+                        let mut magnitude: [Unit; M_LENGTH] = [0; M_LENGTH];
+                        let mut unit_bytes: [u8; UNIT_BYTES] = [0; UNIT_BYTES];
+                        let mut bytes_idx = BYTE_ARRAY_LEN;
+                        for i in 0..M_LENGTH {
+                            let bytes_end = bytes_idx;
+                            bytes_idx -= UNIT_BYTES;
+                            unit_bytes.clone_from_slice(&bytes[bytes_idx..bytes_end]);
+                            magnitude[i] = Unit::from_be_bytes(unit_bytes);
+                        }
+                        Ok($name::from_le_units(neg, magnitude))
+                    }
+                }
+            }
+
+            /// Creates a number from its representation as a byte array in little-endian order.
+            pub fn from_le_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                let flags_byte = bytes[BYTE_ARRAY_LEN - 1];
+                match $name::process_flags_byte(flags_byte)? {
+                    FlagsByteValue::Special(sv) => Ok(sv),
+                    FlagsByteValue::Simple(neg) => {
+                        let mut magnitude: [Unit; M_LENGTH] = [0; M_LENGTH];
+                        let mut unit_bytes: [u8; UNIT_BYTES] = [0; UNIT_BYTES];
+                        let mut bytes_idx = 0;
+                        for i in 0..M_LENGTH {
+                            let bytes_end = bytes_idx + UNIT_BYTES;
+                            unit_bytes.clone_from_slice(&bytes[bytes_idx..bytes_end]);
+                            magnitude[i] = Unit::from_le_bytes(unit_bytes);
+                            bytes_idx = bytes_end;
+                        }
+                        Ok($name::from_le_units(neg, magnitude))
+                    }
+                }
+            }
+
+            /// Creates a number from its representation as a byte array in native order.
+            ///
+            /// As the target platform’s native endianness is used, portable code should use `from_be_bytes()`
+            /// or `from_le_bytes()`, as appropriate, instead.
+            #[inline(always)]
+            pub fn from_ne_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                #[cfg(target_endian = "little")]
+                {
+                    $name::from_le_bytes(bytes)
+                }
+                #[cfg(target_endian = "big")]
+                {
+                    $name::from_be_bytes(bytes)
+                }
+            }
+
             /// Returns infinity of the same sign as this number.
             #[inline(always)]
             fn to_signed_infinity(&self) -> Self {
                 if self.is_sign_positive() { Self::INFINITY } else { Self::NEG_INFINITY }
+            }
+
+            /// Returns the memory representation of this number as a byte array in big-endian (network) byte order.
+            pub fn to_be_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                let mut bytes: [u8; BYTE_ARRAY_LEN] = [0; BYTE_ARRAY_LEN];
+                bytes[0] = self.flags_byte();
+                let mut bytes_idx = BYTE_ARRAY_LEN;
+                for unit in self.magnitude {
+                    let unit_bytes = unit.to_be_bytes();
+                    bytes_idx -= UNIT_BYTES;
+                    for j in 0..UNIT_BYTES {
+                        bytes[bytes_idx + j] = unit_bytes[j];
+                    }
+                }
+                bytes
+            }
+
+            /// Returns the memory representation of this number as a byte array in little-endian byte order.
+            pub fn to_le_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                let mut bytes: [u8; BYTE_ARRAY_LEN] = [0; BYTE_ARRAY_LEN];
+                bytes[BYTE_ARRAY_LEN - 1] = self.flags_byte();
+                let mut bytes_idx = 0;
+                for unit in self.magnitude {
+                    let unit_bytes = unit.to_le_bytes();
+                    for j in 0..UNIT_BYTES {
+                        bytes[bytes_idx + j] = unit_bytes[j];
+                    }
+                    bytes_idx += UNIT_BYTES;
+                }
+                bytes
+            }
+
+            /// Returns the memory representation of this number as a byte array in native byte order.
+            ///
+            /// As the target platform’s native endianness is used, portable code should use `to_be_bytes()`
+            /// or `to_le_bytes()`, as appropriate, instead.
+            #[inline(always)]
+            pub fn to_ne_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                #[cfg(target_endian = "little")]
+                {
+                    self.to_le_bytes()
+                }
+                #[cfg(target_endian = "big")]
+                {
+                    self.to_be_bytes()
+                }
             }
 
             /// Multiplies the number by 10^n. Returns `true` if there was overflow.
@@ -340,6 +464,34 @@ macro_rules! fdec {
                     }
                 }
                 false
+            }
+
+            /// Creates a number from its representation as a byte array in little-endian order.
+            fn process_flags_byte(byte: u8) -> Result<FlagsByteValue, FromBytesError> {
+                let flags = Flags::from(byte);
+                let nan = flags & FLAG_NAN != 0;
+                let infinite = flags & FLAG_INFINITY != 0;
+                if nan && infinite {
+                    return Err(FromBytesError::InvalidFlags);
+                }
+                if flags & !FLAG_NEGATIVE & !FLAG_INFINITY & !FLAG_NAN != 0 {
+                    return Err(FromBytesError::InvalidFlags);   // Some unsupported flags are filled
+                }
+                if nan {
+                    return Ok(FlagsByteValue::Special($name::nan()));
+                }
+                let neg = flags & FLAG_NEGATIVE != 0;
+                if infinite {
+                    let value = if neg { $name::neg_infinity() } else { $name::infinity() };
+                    return Ok(FlagsByteValue::Special(value));
+                }
+                Ok(FlagsByteValue::Simple(flags & FLAG_NEGATIVE != 0))
+            }
+
+            // Returns the byte that holds the number flags.
+            #[inline(always)]
+            fn flags_byte(self) -> u8 {
+                self.flags.to_be_bytes()[UNIT_BYTES - 1]
             }
         }
 
@@ -541,7 +693,7 @@ macro_rules! fdec {
                     None => $name::SCALE,
                     Some(p) => $name::SCALE - (si.str().len() - p - 1),
                 };
-                let mut d = $name::new(si.neg(), mag);
+                let mut d = $name::from_le_units(si.neg(), mag);
                 let overflow = d.move_point_right(sm);
                 if overflow {
                     return Err(ParseNumberError::Overflow);
@@ -907,7 +1059,7 @@ macro_rules! fdec {
                         mag[i] = src[i + full_units]
                     }
                 }
-                $name::new(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
             }
         }
 
@@ -947,7 +1099,7 @@ macro_rules! fdec {
                     }
                 }
 
-                $name::new(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
             }
         }
 

@@ -90,3 +90,19 @@ fn test_constants() {
     assert_eq!(dec::consts::E.to_string(), "2.71828");
     assert_eq!(dec::consts::PI.to_string(), "3.14159");
 }
+
+#[test]
+fn test_to_be_bytes() {
+    assert_eq!(
+        Decimal::from_le_units(true, [5, 4, 3, 2]).to_be_bytes(),
+        [0x01, 0x02, 0x03, 0x04, 0x05]
+    );
+}
+
+#[test]
+fn test_to_le_bytes() {
+    assert_eq!(
+        Decimal::from_le_units(true, [5, 4, 3, 2]).to_le_bytes(),
+        [0x05, 0x04, 0x03, 0x02, 0x01]
+    );
+}

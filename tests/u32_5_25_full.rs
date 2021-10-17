@@ -1047,20 +1047,20 @@ mod ops {
         assert_eq!(Decimal::from(2) << 32, Decimal::from(8589934592u64));
 
         assert_eq!(
-            Decimal::new(false, [0xaabbccdd, 0, 0, 0, 0]) << 32,
-            Decimal::new(false, [0, 0xaabbccdd, 0, 0, 0])
+            Decimal::from_le_units(false, [0xaabbccdd, 0, 0, 0, 0]) << 32,
+            Decimal::from_le_units(false, [0, 0xaabbccdd, 0, 0, 0])
         );
         assert_eq!(
-            Decimal::new(false, [0xaabbccdd, 0, 0, 0, 0]) << 64,
-            Decimal::new(false, [0, 0, 0xaabbccdd, 0, 0])
+            Decimal::from_le_units(false, [0xaabbccdd, 0, 0, 0, 0]) << 64,
+            Decimal::from_le_units(false, [0, 0, 0xaabbccdd, 0, 0])
         );
         assert_eq!(
-            Decimal::new(false, [0xaabbccdd, 0, 0, 0, 0]) << 72,
-            Decimal::new(false, [0, 0, 0xbbccdd00, 0x000000aa, 0])
+            Decimal::from_le_units(false, [0xaabbccdd, 0, 0, 0, 0]) << 72,
+            Decimal::from_le_units(false, [0, 0, 0xbbccdd00, 0x000000aa, 0])
         );
         assert_eq!(
-            Decimal::new(false, [0, 0, 0, 0, 0x40000000]) << 1,
-            Decimal::new(false, [0, 0, 0, 0, 0x80000000])
+            Decimal::from_le_units(false, [0, 0, 0, 0, 0x40000000]) << 1,
+            Decimal::from_le_units(false, [0, 0, 0, 0, 0x80000000])
         );
     }
 
@@ -1070,11 +1070,11 @@ mod ops {
         assert_eq!(Decimal::min() << 1, Decimal::neg_infinity());
 
         assert_eq!(
-            Decimal::new(false, [0, 0, 0, 0, 0x80000000]) << 1,
+            Decimal::from_le_units(false, [0, 0, 0, 0, 0x80000000]) << 1,
             Decimal::infinity()
         );
         assert_eq!(
-            Decimal::new(false, [0, 0, 0, 0, 0x40000000]) << 2,
+            Decimal::from_le_units(false, [0, 0, 0, 0, 0x40000000]) << 2,
             Decimal::infinity()
         );
         assert_eq!(Decimal::ulp() << 160, Decimal::infinity());
@@ -1337,6 +1337,68 @@ mod prim {
         // With overflow
         assert_eq!(Decimal::from(1.0e+25_f64), Decimal::infinity());
         assert_eq!(Decimal::from(-1.0e+25_f64), Decimal::neg_infinity());
+    }
+
+    #[test]
+    fn test_from_le_units() {
+        assert_eq!(
+            Decimal::from_le_units(false, [7, 3, 0, 0, 0]).to_string(),
+            "0.0000000000000012884901895"
+        );
+    }
+
+    #[test]
+    fn test_from_be_units() {
+        assert_eq!(
+            Decimal::from_be_units(false, [0, 0, 0, 3, 7]).to_string(),
+            "0.0000000000000012884901895"
+        );
+    }
+
+    #[test]
+    fn test_from_be_bytes() {
+        assert_eq!(
+            Decimal::from_be_bytes(&[
+                0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x31, 0x32, 0x33, 0x34, 0x00,
+                0x00, 0x00, 0x04, 0x51, 0x52, 0x53, 0x54
+            ])
+            .unwrap(),
+            Decimal::from_le_units(true, [0x51_52_53_54, 4, 0x31_32_33_34, 2, 1])
+        );
+    }
+
+    #[test]
+    fn test_from_le_bytes() {
+        assert_eq!(
+            Decimal::from_le_bytes(&[
+                0x06, 0x00, 0x00, 0x00, 0x54, 0x53, 0x52, 0x51, 0x04, 0x00, 0x00, 0x00, 0x34, 0x33,
+                0x32, 0x31, 0x02, 0x00, 0x00, 0x00, 0x01
+            ])
+            .unwrap(),
+            Decimal::from_le_units(true, [6, 0x51_52_53_54, 4, 0x31_32_33_34, 2])
+        );
+    }
+
+    #[test]
+    fn test_to_be_bytes() {
+        assert_eq!(
+            Decimal::from_le_units(true, [0x51_52_53_54, 4, 0x31_32_33_34, 2, 1]).to_be_bytes(),
+            [
+                0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x31, 0x32, 0x33, 0x34, 0x00,
+                0x00, 0x00, 0x04, 0x51, 0x52, 0x53, 0x54
+            ]
+        );
+    }
+
+    #[test]
+    fn test_to_le_bytes() {
+        assert_eq!(
+            Decimal::from_le_units(true, [6, 0x51_52_53_54, 4, 0x31_32_33_34, 2]).to_le_bytes(),
+            [
+                0x06, 0x00, 0x00, 0x00, 0x54, 0x53, 0x52, 0x51, 0x04, 0x00, 0x00, 0x00, 0x34, 0x33,
+                0x32, 0x31, 0x02, 0x00, 0x00, 0x00, 0x01
+            ]
+        );
     }
 }
 

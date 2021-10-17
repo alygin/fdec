@@ -10,6 +10,7 @@
 //! - has special values NaN and ±Infinity, and uses them instead of panicing,
 //! - provides basic mathematical constants,
 //! - seamlessly interacts with Rust's primitive types,
+//! - converts values to/from byte arrays,
 //! - creates values and performs math operations on stack, avoiding heap allocations.
 //!
 //! ## When to Use
@@ -202,6 +203,13 @@ pub enum ParseNumberError {
     InvalidFormat,
     /// String represents a value that doesn't fit into the numeric type.
     Overflow,
+}
+
+/// Represents errors that can be produces when byte arrays are converted to numbers.
+#[derive(PartialEq, Eq, Debug)]
+pub enum FromBytesError {
+    /// Flags-byte has invalid value.
+    InvalidFlags,
 }
 
 /// Generates a fixed-size fixed-point numeric type that uses `u8`'s as building blocks.

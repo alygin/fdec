@@ -76,7 +76,7 @@ macro_rules! impl_big_primitive_interop {
                 if vv != 0 {
                     return $name::infinity();
                 }
-                let mut num = $name::new(false, mag);
+                let mut num = $name::from_le_units(false, mag);
                 let overflow = num.move_point_right($name::SCALE - scale);
                 if overflow {
                     $name::infinity()
