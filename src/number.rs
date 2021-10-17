@@ -29,14 +29,16 @@ macro_rules! fdec {
         #[doc(hidden)]
         pub use $crate::{Number, WithScale, ParseNumberError, StrInfo};
 
-        const M_LENGTH: usize = $mlen;          // Length of the array (in units) that holds the number data
+        const M_LENGTH: usize = $mlen;                              // Length of the array (in units) that holds the number data
 
-        const UNIT_BITS: usize = $ubits;        // Number of bits in one unit
-        const UNIT_BASE: Unit = $ubase;         // Max power of 10 that fits into a unit
-        const UNIT_BASE_POWER: usize = $ubpow;  // Power of UNIT_BASE
+        const UNIT_BITS: usize = $ubits;                            // Number of bits in one unit
+        const UNIT_BYTES: usize = $ubits / 8;                       // Number of bytest in one unit
+        const UNIT_BASE: Unit = $ubase;                             // Max power of 10 that fits into a unit
+        const UNIT_BASE_POWER: usize = $ubpow;                      // Power of UNIT_BASE
         const UNIT_MASK: BigUnit = $umask;
+        const BYTE_ARRAY_LEN: usize = M_LENGTH * UNIT_BYTES + 1;    // Length of a byte array that can hold the number data. One extra byte is for flags.
 
-        type Flags = $unit;                     // Flags use unit type to keep struct alignment. Making it smaller doesn't make any difference at lower level.
+        type Flags = $unit;                                         // Flags use unit type to keep struct alignment. Making it smaller doesn't make any difference at lower level.
         type Unit = $unit;
         type BigUnit = $bigunit;
         type IBigUnit = $ibigunit;
@@ -127,7 +129,7 @@ macro_rules! fdec {
         #[derive(Copy, Clone)]
         pub struct $name {
             flags: Flags,
-            magnitude: [Unit; M_LENGTH],
+            magnitude: [Unit; M_LENGTH],    // Number magnitude in little-endian order
         }
 
         impl Number for $name {
@@ -299,7 +301,7 @@ macro_rules! fdec {
             const MIN: $name = $name { flags: FLAG_NEGATIVE, magnitude: [Unit::max_value(); M_LENGTH] };
             const MAX: $name = $name { flags: FLAGS_NO, magnitude: [Unit::max_value(); M_LENGTH] };
 
-            /// Creates a number with the given magnitude. If `neg` is `true`, a negative value
+            /// Creates a number with the given magnitude (in little-endian units order). If `neg` is `true`, a negative value
             /// will be created. Othewise, a positive number is created.
             #[inline(always)]
             pub const fn new(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
@@ -331,6 +333,52 @@ macro_rules! fdec {
                 if self.is_sign_positive() { Self::INFINITY } else { Self::NEG_INFINITY }
             }
 
+            /// Returns the memory representation of this number as a byte array in big-endian (network) byte order.
+            pub fn to_be_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                let mut bytes: [u8; BYTE_ARRAY_LEN] = [0; BYTE_ARRAY_LEN];
+                bytes[0] = self.flags_byte();
+                let mut bytes_idx = BYTE_ARRAY_LEN;
+                for unit in self.magnitude {
+                    let unit_bytes = unit.to_be_bytes();
+                    bytes_idx -= UNIT_BYTES;
+                    for j in 0..UNIT_BYTES {
+                        bytes[bytes_idx + j] = unit_bytes[j];
+                    }
+                }
+                bytes
+            }
+
+            /// Returns the memory representation of this number as a byte array in little-endian byte order.
+            pub fn to_le_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                let mut bytes: [u8; BYTE_ARRAY_LEN] = [0; BYTE_ARRAY_LEN];
+                bytes[BYTE_ARRAY_LEN - 1] = self.flags_byte();
+                let mut bytes_idx = 0;
+                for unit in self.magnitude {
+                    let unit_bytes = unit.to_le_bytes();
+                    for j in 0..UNIT_BYTES {
+                        bytes[bytes_idx + j] = unit_bytes[j];
+                    }
+                    bytes_idx += UNIT_BYTES;
+                }
+                bytes
+            }
+
+            /// Returns the memory representation of this number as a byte array in native byte order.
+            ///
+            /// As the target platform’s native endianness is used, portable code should use to_be_bytes
+            /// or to_le_bytes, as appropriate, instead.
+            #[inline(always)]
+            pub fn to_ne_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
+                #[cfg(target_endian = "little")]
+                {
+                    self.to_le_bytes()
+                }
+                #[cfg(target_endian = "big")]
+                {
+                    self.to_be_bytes()
+                }
+            }
+
             /// Multiplies the number by 10^n. Returns `true` if there was overflow.
             #[inline(always)]
             fn move_point_right(&mut self, n: usize) -> bool {
@@ -340,6 +388,12 @@ macro_rules! fdec {
                     }
                 }
                 false
+            }
+
+            // Returns the byte that holds the number flags.
+            #[inline(always)]
+            fn flags_byte(self) -> u8 {
+                self.flags.to_be_bytes()[UNIT_BYTES - 1]
             }
         }
 
