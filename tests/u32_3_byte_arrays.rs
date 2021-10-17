@@ -102,7 +102,7 @@ fn test_from_be_bytes_special_numbers() {
 }
 
 #[test]
-fn test_from_to_be_bytes() {
+fn test_to_from_be_bytes() {
     assert_to_from_be_bytes(Dec::zero());
     assert_to_from_be_bytes(Dec::ulp());
     assert_to_from_be_bytes(Dec::one());
@@ -115,11 +115,11 @@ fn test_from_to_be_bytes() {
 #[test]
 fn test_from_be_bytes_invalid() {
     assert_eq!(
-        Dec::from_be_bytes(&[0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),    // NaN & Infinite at the same time
+        Dec::from_be_bytes(&[0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), // NaN & Infinite at the same time
         Err(FromBytesError::InvalidFlags)
     );
     assert_eq!(
-        Dec::from_be_bytes(&[0x08, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),    // Unsupported flag is filled
+        Dec::from_be_bytes(&[0x08, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), // Unsupported flag is filled
         Err(FromBytesError::InvalidFlags)
     );
 }
@@ -156,7 +156,7 @@ fn test_from_le_bytes_special_numbers() {
 }
 
 #[test]
-fn test_from_to_le_bytes() {
+fn test_to_from_le_bytes() {
     assert_to_from_le_bytes(Dec::zero());
     assert_to_from_le_bytes(Dec::ulp());
     assert_to_from_le_bytes(Dec::one());

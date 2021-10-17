@@ -10,6 +10,7 @@
 //! - has special values NaN and ±Infinity, and uses them instead of panicing,
 //! - provides basic mathematical constants,
 //! - seamlessly interacts with Rust's primitive types,
+//! - converts values to/from byte arrays,
 //! - creates values and performs math operations on stack, avoiding heap allocations.
 //!
 //! ## When to Use
