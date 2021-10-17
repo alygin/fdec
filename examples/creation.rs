@@ -72,7 +72,15 @@ fn main() {
     print(-Decimal::from(10), "Minus ten");
     print(-Decimal::zero(), "-0 is 0");
 
-    println!("\nFrom byte arrays");
+    println!("\nFrom arrays");
+    print(
+        Decimal::from_be_units(false, [0, 0, 17, 3, 2]),
+        "From a unit array (BE)",
+    );
+    print(
+        Decimal::from_le_units(false, [2, 3, 17, 0, 0]),
+        "From a unit array (LE)",
+    );
     print(
         Decimal::from_be_bytes(&[
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x0A, 0x12, 0x9B, 0x54,
@@ -147,7 +155,9 @@ Negation
   Minus ten                : -10
   -0 is 0                  : 0
 
-From byte arrays
+From arrays
+  From a unit array (BE)   : 0.0000313594649265947279362
+  From a unit array (LE)   : 0.0000313594649265947279362
   From a byte array (BE)   : 0.0000000000000000168991572
   From a byte array (LE)   : 0.0000000000000000168991572
 

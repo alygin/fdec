@@ -1,4 +1,4 @@
-//! Set of tests for methods that export fdec numbers to byte arrays or create fdec numbers from byte arrays.
+//! Set of tests for methods that export fdec numbers to byte arrays or create fdec numbers from byte/unit arrays.
 #[macro_use]
 extern crate fdec;
 
@@ -36,7 +36,7 @@ fn test_to_be_bytes() {
         [0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     );
     assert_eq!(
-        Dec::new(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4]).to_be_bytes(),
+        Dec::from_le_units(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4]).to_be_bytes(),
         [0x01, 0xA1, 0xA2, 0xA3, 0xA4, 0xB1, 0xB2, 0xB3, 0xB4, 0xC1, 0xC2, 0xC3, 0xC4]
     );
 }
@@ -65,8 +65,32 @@ fn test_to_le_bytes() {
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05]
     );
     assert_eq!(
-        Dec::new(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4]).to_le_bytes(),
+        Dec::from_le_units(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4]).to_le_bytes(),
         [0xC4, 0xC3, 0xC2, 0xC1, 0xB4, 0xB3, 0xB2, 0xB1, 0xA4, 0xA3, 0xA2, 0xA1, 0x01]
+    );
+}
+
+#[test]
+fn test_from_le_units() {
+    assert_eq!(Dec::from_le_units(false, [0; 3]), Dec::zero());
+    assert_eq!(Dec::from_le_units(false, [1, 0, 0]), Dec::ulp());
+    assert_eq!(Dec::from_le_units(false, [u32::MAX; 3]), Dec::max());
+    assert_eq!(Dec::from_le_units(true, [u32::MAX; 3]), Dec::min());
+    assert_eq!(
+        Dec::from_le_units(false, [9, 3, 0]).to_string(),
+        "128849.01897"
+    );
+}
+
+#[test]
+fn test_from_be_units() {
+    assert_eq!(Dec::from_be_units(false, [0; 3]), Dec::zero());
+    assert_eq!(Dec::from_be_units(false, [0, 0, 1]), Dec::ulp());
+    assert_eq!(Dec::from_be_units(false, [u32::MAX; 3]), Dec::max());
+    assert_eq!(Dec::from_be_units(true, [u32::MAX; 3]), Dec::min());
+    assert_eq!(
+        Dec::from_be_units(false, [0, 3, 9]).to_string(),
+        "128849.01897"
     );
 }
 
@@ -83,7 +107,7 @@ fn test_from_be_bytes() {
     .unwrap();
     assert_eq!(
         val,
-        Dec::new(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4])
+        Dec::from_le_units(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4])
     );
 }
 
@@ -137,7 +161,7 @@ fn test_from_le_bytes() {
     .unwrap();
     assert_eq!(
         val,
-        Dec::new(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4])
+        Dec::from_le_units(true, [0xC1_C2_C3_C4, 0xB1_B2_B3_B4, 0xA1_A2_A3_A4])
     );
 }
 

@@ -307,11 +307,11 @@ macro_rules! fdec {
             const MIN: $name = $name { flags: FLAG_NEGATIVE, magnitude: [Unit::max_value(); M_LENGTH] };
             const MAX: $name = $name { flags: FLAGS_NO, magnitude: [Unit::max_value(); M_LENGTH] };
 
-            /// Creates a number with the given magnitude (in little-endian units order). If `neg` is `true`, a negative value
-            /// will be created. Othewise, a positive number is created.
-            #[inline(always)]
+            /// Creates a number with the given magnitude (in little-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            #[deprecated(since = "0.3", note = "Use `from_le_units()` instead")]
             pub const fn new(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
-                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
+                $name::from_le_units(neg, magnitude)
             }
 
             #[inline(always)]
@@ -322,8 +322,7 @@ macro_rules! fdec {
 
             fn from_unit(neg: bool, v: Unit, scale: usize) -> Self {
                 debug_assert!(scale <= $name::SCALE);
-
-                let mut d = $name::new(neg && v > 0, [0; M_LENGTH]);
+                let mut d = $name::from_le_units(neg && v > 0, [0; M_LENGTH]);
                 d.magnitude[0] = v;
                 let overflow = d.move_point_right($name::SCALE - scale);
                 if overflow {
@@ -331,6 +330,21 @@ macro_rules! fdec {
                 } else {
                     d
                 }
+            }
+
+            /// Creates a number with the given magnitude (in little-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            #[inline(always)]
+            pub const fn from_le_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
+            }
+
+            /// Creates a number with the given magnitude (in big-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            pub fn from_be_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                let mut le_magnitude = magnitude;
+                le_magnitude.reverse();
+                $name::from_le_units(neg, le_magnitude)
             }
 
             /// Creates a number from its representation as a byte array in big-endian order.
@@ -348,7 +362,7 @@ macro_rules! fdec {
                             unit_bytes.clone_from_slice(&bytes[bytes_idx..bytes_end]);
                             magnitude[i] = Unit::from_be_bytes(unit_bytes);
                         }
-                        Ok($name::new(neg, magnitude))
+                        Ok($name::from_le_units(neg, magnitude))
                     }
                 }
             }
@@ -368,7 +382,7 @@ macro_rules! fdec {
                             magnitude[i] = Unit::from_le_bytes(unit_bytes);
                             bytes_idx = bytes_end;
                         }
-                        Ok($name::new(neg, magnitude))
+                        Ok($name::from_le_units(neg, magnitude))
                     }
                 }
             }
@@ -679,7 +693,7 @@ macro_rules! fdec {
                     None => $name::SCALE,
                     Some(p) => $name::SCALE - (si.str().len() - p - 1),
                 };
-                let mut d = $name::new(si.neg(), mag);
+                let mut d = $name::from_le_units(si.neg(), mag);
                 let overflow = d.move_point_right(sm);
                 if overflow {
                     return Err(ParseNumberError::Overflow);
@@ -1045,7 +1059,7 @@ macro_rules! fdec {
                         mag[i] = src[i + full_units]
                     }
                 }
-                $name::new(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
             }
         }
 
@@ -1085,7 +1099,7 @@ macro_rules! fdec {
                     }
                 }
 
-                $name::new(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
             }
         }
 
