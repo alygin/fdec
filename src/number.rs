@@ -27,7 +27,7 @@ macro_rules! fdec {
         use std::str::FromStr;
 
         #[doc(hidden)]
-        pub use $crate::{Number, WithScale, ParseNumberError, StrInfo};
+        pub use $crate::{Number, WithScale, ParseNumberError, FromBytesError, StrInfo};
 
         const M_LENGTH: usize = $mlen;                              // Length of the array (in units) that holds the number data
 
@@ -293,6 +293,12 @@ macro_rules! fdec {
             }
         }
 
+        // Result of converting a byte to flags.
+        enum FlagsByteValue {
+            Special($name),     // Flags byte contains a special value flag
+            Simple(bool)        // Negative-flag value for a simple number value
+        }
+
         impl $name {
             const NAN: $name = $name { flags: FLAG_NAN, magnitude: [0; M_LENGTH] };
             const ZERO: $name = $name { flags: FLAGS_NO, magnitude: [0; M_LENGTH] };
@@ -324,6 +330,62 @@ macro_rules! fdec {
                     if neg { $name::neg_infinity() } else { $name::infinity() }
                 } else {
                     d
+                }
+            }
+
+            /// Creates a number from its representation as a byte array in big-endian order.
+            pub fn from_be_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                let flags_byte = bytes[0];
+                match $name::process_flags_byte(flags_byte)? {
+                    FlagsByteValue::Special(sv) => Ok(sv),
+                    FlagsByteValue::Simple(neg) => {
+                        let mut magnitude: [Unit; M_LENGTH] = [0; M_LENGTH];
+                        let mut unit_bytes: [u8; UNIT_BYTES] = [0; UNIT_BYTES];
+                        let mut bytes_idx = BYTE_ARRAY_LEN;
+                        for i in 0..M_LENGTH {
+                            let bytes_end = bytes_idx;
+                            bytes_idx -= UNIT_BYTES;
+                            unit_bytes.clone_from_slice(&bytes[bytes_idx..bytes_end]);
+                            magnitude[i] = Unit::from_be_bytes(unit_bytes);
+                        }
+                        Ok($name::new(neg, magnitude))
+                    }
+                }
+            }
+
+            /// Creates a number from its representation as a byte array in little-endian order.
+            pub fn from_le_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                let flags_byte = bytes[BYTE_ARRAY_LEN - 1];
+                match $name::process_flags_byte(flags_byte)? {
+                    FlagsByteValue::Special(sv) => Ok(sv),
+                    FlagsByteValue::Simple(neg) => {
+                        let mut magnitude: [Unit; M_LENGTH] = [0; M_LENGTH];
+                        let mut unit_bytes: [u8; UNIT_BYTES] = [0; UNIT_BYTES];
+                        let mut bytes_idx = 0;
+                        for i in 0..M_LENGTH {
+                            let bytes_end = bytes_idx + UNIT_BYTES;
+                            unit_bytes.clone_from_slice(&bytes[bytes_idx..bytes_end]);
+                            magnitude[i] = Unit::from_le_bytes(unit_bytes);
+                            bytes_idx = bytes_end;
+                        }
+                        Ok($name::new(neg, magnitude))
+                    }
+                }
+            }
+
+            /// Creates a number from its representation as a byte array in native order.
+            ///
+            /// As the target platform’s native endianness is used, portable code should use `from_be_bytes()`
+            /// or `from_le_bytes()`, as appropriate, instead.
+            #[inline(always)]
+            pub fn from_ne_bytes(bytes: &[u8; BYTE_ARRAY_LEN]) -> Result<Self, FromBytesError> {
+                #[cfg(target_endian = "little")]
+                {
+                    $name::from_le_bytes(bytes)
+                }
+                #[cfg(target_endian = "big")]
+                {
+                    $name::from_be_bytes(bytes)
                 }
             }
 
@@ -365,8 +427,8 @@ macro_rules! fdec {
 
             /// Returns the memory representation of this number as a byte array in native byte order.
             ///
-            /// As the target platform’s native endianness is used, portable code should use to_be_bytes
-            /// or to_le_bytes, as appropriate, instead.
+            /// As the target platform’s native endianness is used, portable code should use `to_be_bytes()`
+            /// or `to_le_bytes()`, as appropriate, instead.
             #[inline(always)]
             pub fn to_ne_bytes(self) -> [u8; BYTE_ARRAY_LEN] {
                 #[cfg(target_endian = "little")]
@@ -388,6 +450,28 @@ macro_rules! fdec {
                     }
                 }
                 false
+            }
+
+            /// Creates a number from its representation as a byte array in little-endian order.
+            fn process_flags_byte(byte: u8) -> Result<FlagsByteValue, FromBytesError> {
+                let flags = Flags::from(byte);
+                let nan = flags & FLAG_NAN != 0;
+                let infinite = flags & FLAG_INFINITY != 0;
+                if nan && infinite {
+                    return Err(FromBytesError::InvalidFlags);
+                }
+                if flags & !FLAG_NEGATIVE & !FLAG_INFINITY & !FLAG_NAN != 0 {
+                    return Err(FromBytesError::InvalidFlags);   // Some unsupported flags are filled
+                }
+                if nan {
+                    return Ok(FlagsByteValue::Special($name::nan()));
+                }
+                let neg = flags & FLAG_NEGATIVE != 0;
+                if infinite {
+                    let value = if neg { $name::neg_infinity() } else { $name::infinity() };
+                    return Ok(FlagsByteValue::Special(value));
+                }
+                Ok(FlagsByteValue::Simple(flags & FLAG_NEGATIVE != 0))
             }
 
             // Returns the byte that holds the number flags.

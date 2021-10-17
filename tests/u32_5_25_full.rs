@@ -1664,6 +1664,30 @@ mod byte_arrays {
     use super::decimal::*;
 
     #[test]
+    fn test_from_be_bytes() {
+        assert_eq!(
+            Decimal::from_be_bytes(&[
+                0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x31, 0x32, 0x33, 0x34, 0x00,
+                0x00, 0x00, 0x04, 0x51, 0x52, 0x53, 0x54
+            ])
+            .unwrap(),
+            Decimal::new(true, [0x51_52_53_54, 4, 0x31_32_33_34, 2, 1])
+        );
+    }
+
+    #[test]
+    fn test_from_le_bytes() {
+        assert_eq!(
+            Decimal::from_le_bytes(&[
+                0x06, 0x00, 0x00, 0x00, 0x54, 0x53, 0x52, 0x51, 0x04, 0x00, 0x00, 0x00, 0x34, 0x33,
+                0x32, 0x31, 0x02, 0x00, 0x00, 0x00, 0x01
+            ])
+            .unwrap(),
+            Decimal::new(true, [6, 0x51_52_53_54, 4, 0x31_32_33_34, 2])
+        );
+    }
+
+    #[test]
     fn test_to_be_bytes() {
         assert_eq!(
             Decimal::new(true, [0x51_52_53_54, 4, 0x31_32_33_34, 2, 1]).to_be_bytes(),

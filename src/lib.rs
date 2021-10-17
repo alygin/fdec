@@ -204,6 +204,13 @@ pub enum ParseNumberError {
     Overflow,
 }
 
+/// Represents errors that can be produces when byte arrays are converted to numbers.
+#[derive(PartialEq, Eq, Debug)]
+pub enum FromBytesError {
+    /// Flags-byte has invalid value.
+    InvalidFlags,
+}
+
 /// Generates a fixed-size fixed-point numeric type that uses `u8`'s as building blocks.
 ///
 /// # Examples
