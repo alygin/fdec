@@ -203,7 +203,7 @@ macro_rules! fdec {
 
             #[inline(always)]
             fn is_zero(&self) -> bool {
-                if self.is_special() { false } else { is_magnitude_zero(&self.magnitude) }
+                self.flags == FLAGS_NO && is_magnitude_zero(&self.magnitude)
             }
 
             fn abs(&self) -> Self {
@@ -310,7 +310,7 @@ macro_rules! fdec {
             /// Creates a number with the given magnitude (in little-endian units order).
             /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
             #[deprecated(since = "0.3", note = "Use `from_le_units()` instead")]
-            pub const fn new(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+            pub fn new(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
                 $name::from_le_units(neg, magnitude)
             }
 
@@ -322,8 +322,9 @@ macro_rules! fdec {
 
             fn from_unit(neg: bool, v: Unit, scale: usize) -> Self {
                 debug_assert!(scale <= $name::SCALE);
-                let mut d = $name::from_le_units(neg && v > 0, [0; M_LENGTH]);
-                d.magnitude[0] = v;
+                let mut magnitude = [0; M_LENGTH];
+                magnitude[0] = v;
+                let mut d = $name::from_le_units(neg && v > 0, magnitude);
                 let overflow = d.move_point_right($name::SCALE - scale);
                 if overflow {
                     if neg { $name::neg_infinity() } else { $name::infinity() }
@@ -334,9 +335,9 @@ macro_rules! fdec {
 
             /// Creates a number with the given magnitude (in little-endian units order).
             /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
-            #[inline(always)]
-            pub const fn from_le_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
-                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
+            pub fn from_le_units(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                let real_neg = if neg { !is_magnitude_zero(&magnitude) } else { false };
+                $name::from_le_units_unchecked(real_neg, magnitude)
             }
 
             /// Creates a number with the given magnitude (in big-endian units order).
@@ -453,6 +454,14 @@ macro_rules! fdec {
                 {
                     self.to_be_bytes()
                 }
+            }
+
+            /// Creates a number with the given magnitude (in little-endian units order).
+            /// `neg` defines if a negative (if `true`) or a positive (if `false`) value will be created.
+            /// The caller must guarantee that `-0` is not created.
+            #[inline(always)]
+            const fn from_le_units_unchecked(neg: bool, magnitude: [Unit; M_LENGTH]) -> Self {
+                $name { flags: if neg { FLAG_NEGATIVE } else { FLAGS_NO }, magnitude }
             }
 
             /// Multiplies the number by 10^n. Returns `true` if there was overflow.
@@ -1059,7 +1068,7 @@ macro_rules! fdec {
                         mag[i] = src[i + full_units]
                     }
                 }
-                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative(), mag)
             }
         }
 
@@ -1099,7 +1108,7 @@ macro_rules! fdec {
                     }
                 }
 
-                $name::from_le_units(self.is_sign_negative() && !is_magnitude_zero(&mag), mag)
+                $name::from_le_units(self.is_sign_negative(), mag)
             }
         }
 
@@ -1388,7 +1397,6 @@ macro_rules! fdec {
         }
 
         /// Checks if all the units in the given magnitude are zeros.
-        #[inline(always)]
         fn is_magnitude_zero(m: &[Unit; M_LENGTH]) -> bool {
             for d in m.iter() {
                 if *d != 0 {
