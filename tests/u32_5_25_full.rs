@@ -17,6 +17,7 @@ fn test_str(d: Decimal, expected: &str) {
 #[cfg(test)]
 mod basic {
     use super::decimal::*;
+    use std::str::FromStr;
 
     #[test]
     fn test_nan() {
@@ -150,6 +151,33 @@ mod basic {
     fn test_macro() {
         assert_eq!(decimal!(75), Decimal::from(75));
         assert_eq!(decimal!(75, 1), Decimal::with_scale(75, 1));
+    }
+
+    #[test]
+    fn test_negative_zero() {
+        assert_zero(Decimal::from_be_units(true, [0; 5]));
+        assert_zero(Decimal::from_le_units(true, [0; 5]));
+        assert_zero(
+            Decimal::from_be_bytes(&[
+                0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+            .unwrap(),
+        );
+        assert_zero(
+            Decimal::from_le_bytes(&[
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01,
+            ])
+            .unwrap(),
+        );
+        assert_zero(Decimal::from_str("-0").unwrap());
+        assert_zero(decimal!(-3) + decimal!(3));
+        assert_zero(-3 + decimal!(3));
+    }
+
+    fn assert_zero(value: Decimal) {
+        assert!(!value.is_sign_negative());
+        assert!(value.is_zero());
+        assert_eq!(value, Decimal::zero());
     }
 }
 
