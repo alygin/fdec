@@ -28,6 +28,7 @@ macro_rules! fdec {
 
         #[doc(hidden)]
         pub use $crate::{Number, WithScale, ParseNumberError, FromBytesError, StrInfo};
+        pub use $crate::units::*;
 
         const M_LENGTH: usize = $mlen;                              // Length of the array (in units) that holds the number data
 
@@ -1146,10 +1147,10 @@ macro_rules! fdec {
             let mut carry = u as BigUnit;
             for d in mag.iter_mut() {
                 let m = (carry as BigUnit) + (*d as BigUnit);
-                *d = lo(m);
+                *d = Unit::lo(m);
                 carry = m >> UNIT_BITS;
             }
-            lo(carry)
+            Unit::lo(carry)
         }
 
         /// Adds `rhs` to `dest` and returns the carry unit if there was overflow.
@@ -1158,8 +1159,8 @@ macro_rules! fdec {
             let mut carry = 0;
             for (d, r) in dest.iter_mut().zip(rhs.iter()) {
                 let m = (carry as BigUnit) + (*d as BigUnit) + (*r as BigUnit);
-                *d = lo(m);
-                carry = hi(m);
+                *d = Unit::lo(m);
+                carry = Unit::hi(m);
             }
             carry
         }
@@ -1190,7 +1191,7 @@ macro_rules! fdec {
                 }
 
                 bs -= br;
-                *s = lo(bs);
+                *s = Unit::lo(bs);
             }
 
             debug_assert!(!borrow);
@@ -1203,10 +1204,10 @@ macro_rules! fdec {
             let mul = v as BigUnit;
             for mut u in mag.iter_mut() {
                 let m = carry + *u as BigUnit * mul;
-                carry = hi(m) as BigUnit;
-                *u = lo(m);
+                carry = Unit::hi(m) as BigUnit;
+                *u = Unit::lo(m);
             }
-            lo(carry)
+            Unit::lo(carry)
         }
 
         /// Calculates `a` * `b`.
@@ -1219,7 +1220,7 @@ macro_rules! fdec {
             for ad in a.iter() {
                 for bd in b.iter() {
                     let t = *ad as BigUnit * *bd as BigUnit;
-                    let (t_hi, t_lo) = (hi(t), lo(t));
+                    let (t_hi, t_lo) = (Unit::hi(t), Unit::lo(t));
                     let c = add_unit(&mut dest[k..], t_lo);
                     debug_assert!(c == 0);
                     let c = add_unit(&mut dest[k+1..], t_hi);
@@ -1262,8 +1263,8 @@ macro_rules! fdec {
                 let mut c = 0;
                 for j in (0..m).rev() {
                     let p = big_unit(c, dividend[j]);
-                    qq[j] = lo(p / bv_hi);
-                    c = lo(p % bv_hi);
+                    qq[j] = Unit::lo(p / bv_hi);
+                    c = Unit::lo(p % bv_hi);
                 }
                 rr[0] = c;
                 return DivProduct::Normal { int: qq, rem: rr };
@@ -1317,7 +1318,7 @@ macro_rules! fdec {
                 }
                 t = u[j+n] as IBigUnit - k;
                 u[j+n] = t as Unit;
-                qq[j] = lo(q);
+                qq[j] = Unit::lo(q);
 
                 // If subtracted too much, add one divisor back
                 if t < 0 {
@@ -1354,17 +1355,6 @@ macro_rules! fdec {
             };
         }
 
-        /// Returns the number of the significant units in the slice.
-        #[inline(always)]
-        fn weight(mag: &[Unit]) -> usize {
-            for (i, u) in mag.iter().enumerate().rev() {
-                if *u != 0 {
-                    return i + 1;
-                }
-            }
-            0
-        }
-
         #[inline(always)]
         fn magnitude_from_slice(src: &[Unit]) -> [Unit; M_LENGTH] {
             let mut mag = [0; M_LENGTH];
@@ -1394,32 +1384,6 @@ macro_rules! fdec {
             for i in 0..len {
                 dest[i] = (src[i] >> s) | (src[i+1].wrapping_shl(UNIT_BITS as u32 - s));
             }
-        }
-
-        /// Checks if all the units in the given magnitude are zeros.
-        fn is_magnitude_zero(m: &[Unit; M_LENGTH]) -> bool {
-            for d in m.iter() {
-                if *d != 0 {
-                    return false;
-                }
-            }
-            true
-        }
-
-        /// Creates a big unit from two parts.
-        #[inline(always)]
-        fn big_unit(hi: Unit, lo: Unit) -> BigUnit {
-            (lo as BigUnit) | ((hi as BigUnit) << UNIT_BITS)
-        }
-
-        #[inline(always)]
-        fn hi(u: BigUnit) -> Unit {
-            (u >> UNIT_BITS) as Unit
-        }
-
-        #[inline(always)]
-        fn lo(u: BigUnit) -> Unit {
-            u as Unit
         }
 
         fn to_digits(mut digits: Vec<Unit>) -> Vec<u8> {
@@ -1455,14 +1419,6 @@ macro_rules! fdec {
             let val = big_unit(hi, lo);
             let bdiv = divisor as BigUnit;
             ((val / bdiv) as Unit, (val % bdiv) as Unit)
-        }
-
-        /// Removes trailing zeros
-        #[inline]
-        fn normalize_digits(m: &mut Vec<Unit>) {
-            while let Some(&0) = m.last() {
-                m.pop();
-            }
         }
 
         fn div_rem_digit(mut digits: Vec<Unit>, b: Unit) -> (Vec<Unit>, Unit) {

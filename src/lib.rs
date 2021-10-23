@@ -101,6 +101,8 @@ mod binomial;
 pub mod consts;
 mod number;
 mod prim;
+#[doc(hidden)]
+pub mod units;
 
 /// Trait of types that can create values from other types with scaling.
 pub trait WithScale<T> {
