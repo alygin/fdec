@@ -1383,7 +1383,7 @@ macro_rules! fdec {
         #[inline(always)]
         fn copy_with_shl(src: &[Unit], dest: &mut[Unit], len: usize, s: u32) {
             for i in (1..len).rev() {
-                let l = if i < src.len() { (src[i].wrapping_shl(s)) } else { 0 };      // TODO: Looks ugly. Refactor
+                let l = if i < src.len() { src[i].wrapping_shl(s) } else { 0 };      // TODO: Looks ugly. Refactor
                 dest[i] = l | (src[i-1] >> (UNIT_BITS - s as usize));
             }
             dest[0] = src[0] << s;

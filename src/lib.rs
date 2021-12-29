@@ -439,7 +439,7 @@ macro_rules! fdec64 {
 /// Basic information about the string to be parsed
 #[doc(hidden)]
 pub struct StrInfo<'a> {
-    str: &'a str,         // String witout leading or trailing zeros
+    str: &'a str,         // String without leading or trailing zeros
     neg: bool,            // Indicates that the number is negative
     point: Option<usize>, // Position of the decimal point
 }
