@@ -119,13 +119,15 @@ macro_rules! impl_float_primitive_interop {
                 if !v.is_normal() {
                     if v.is_nan() {
                         return $name::NAN;
-                    } else if v.is_infinite() {
+                    }
+                    if v.is_infinite() {
                         return if v.is_sign_negative() {
                             $name::NEG_INFINITY
                         } else {
                             $name::INFINITY
                         };
-                    } else if v == 0 as $prim {
+                    }
+                    if v == 0 as $prim {
                         return $name::ZERO;
                     }
                     // Subnormal values are handled as normal

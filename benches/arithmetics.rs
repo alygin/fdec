@@ -2,8 +2,8 @@
 extern crate fdec;
 extern crate criterion;
 
-use std::u64::MAX as U64_MAX;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::u64::MAX as U64_MAX;
 
 fdec32! {
     module decimal,

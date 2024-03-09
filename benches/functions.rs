@@ -18,7 +18,7 @@ fn sqrt(c: &mut Criterion) {
     const N: usize = 20;
 
     let mut x = Decimal::zero();
-    c.bench_function("sqrt", |b|
+    c.bench_function("sqrt", |b| {
         b.iter(|| {
             let two = Decimal::from(2);
             let a = Decimal::from(A);
@@ -27,7 +27,7 @@ fn sqrt(c: &mut Criterion) {
                 x = (x + a / x) / two;
             }
         })
-    );
+    });
 
     assert_eq!(x.to_string(), "22360.6797749978969640917366873");
 }
@@ -38,11 +38,11 @@ fn powi(c: &mut Criterion) {
 
     let v = Decimal::from(V);
     let mut x = Decimal::default();
-    c.bench_function("powi", |b|
+    c.bench_function("powi", |b| {
         b.iter(|| {
             x = v.powi(N);
         })
-    );
+    });
 
     assert_eq!(x.to_string(), "100000000000000000000");
 }

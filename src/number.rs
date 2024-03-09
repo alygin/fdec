@@ -224,7 +224,7 @@ macro_rules! fdec {
 
             fn fract(&self) -> Self {
                 if self.is_special() || self.is_zero() {
-                    return *self
+                    *self
                 } else {
                     *self % $name::one()
                 }
@@ -233,7 +233,8 @@ macro_rules! fdec {
             fn sqrt(&self) -> Self {
                 if self.is_nan() || (self.is_infinite() && self.is_sign_positive()) {
                     return *self;
-                } else if self.is_sign_negative() {
+                }
+                if self.is_sign_negative() {
                     return Self::nan();
                 }
                 const MAX_ITER: u32 = 100;
@@ -262,9 +263,11 @@ macro_rules! fdec {
                     } else {
                         $name::infinity()
                     };
-                } else if n == 0 {
+                }
+                if n == 0 {
                     return $name::one();
-                } else if n < 0 {
+                }
+                if n < 0 {
                     return if self.is_zero() {
                         $name::infinity()
                     } else if n == i32::min_value() {           // Prevent overflow when switching from min_value
@@ -289,7 +292,7 @@ macro_rules! fdec {
                         mul = mul * mul;
                     }
                 }
-                return res;
+                res
             }
         }
 
@@ -588,7 +591,8 @@ macro_rules! fdec {
                     } else {    // self is Infinity
                         !other.is_nan() && self.flags == other.flags
                     };
-                } else if other.is_special() {
+                }
+                if other.is_special() {
                     return false;
                 }
                 if self.flags & FLAG_NEGATIVE != other.flags & FLAG_NEGATIVE {
@@ -615,7 +619,8 @@ macro_rules! fdec {
                     } else {                               // self is -Infinity
                         Some(Ordering::Less)
                     };
-                } else if other.is_special() {
+                }
+                if other.is_special() {
                     return if other.is_nan() {
                         None
                     } else if other.is_sign_positive() {   // other is +Infinity
@@ -640,8 +645,9 @@ macro_rules! fdec {
                     if s > o {
                         ord = Ordering::Greater;
                         break;
-                    } else if s < o {
-                        ord = Ordering::Less    ;
+                    }
+                    if s < o {
+                        ord = Ordering::Less;
                         break;
                     }
                 }
@@ -975,9 +981,11 @@ macro_rules! fdec {
                 // Handle special cases
                 if self.is_special() {
                     return if self.is_nan() || rhs.is_special() { $name::NAN } else { self };
-                } else if rhs.is_special() {
+                }
+                if rhs.is_special() {
                     return if rhs.is_nan() { $name::NAN } else { $name::ZERO };
-                } else if rhs.is_zero() {
+                }
+                if rhs.is_zero() {
                     return if self.is_zero() {
                         $name::NAN
                     } else {
@@ -1015,9 +1023,11 @@ macro_rules! fdec {
                 // Handle special cases
                 if self.is_special() {
                     return $name::NAN;
-                } else if rhs.is_special() {
+                }
+                if rhs.is_special() {
                     return if rhs.is_nan() { $name::NAN } else { self };
-                } else if rhs.is_zero() {
+                }
+                if rhs.is_zero() {
                     return $name::NAN;
                 }
 
@@ -1129,7 +1139,8 @@ macro_rules! fdec {
             for (s, r) in a.iter().rev().zip(b.iter().rev()) {
                 if s > r {
                     return Ordering::Greater;
-                } else if s < r {
+                }
+                if s < r {
                     return Ordering::Less;
                 }
             }
@@ -1255,9 +1266,11 @@ macro_rules! fdec {
                     int: [0; BIG_M_LENGTH],
                     rem: magnitude_from_slice(&dividend[..M_LENGTH])
                 };
-            } else if m - n > M_LENGTH {
+            }
+            if m - n > M_LENGTH {
                 return DivProduct::Infinity;
-            } else if n == 1 {
+            }
+            if n == 1 {
                 // Special case for a one-unit divisor
                 let mut c = 0;
                 for j in (0..m).rev() {

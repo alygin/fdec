@@ -18,9 +18,10 @@ impl Iterator for Binomial {
     type Item = u64;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let c = if self.idx > self.n {
+        if self.idx > self.n {
             return None;
-        } else if self.idx == 0 || self.idx == self.n {
+        }
+        let c = if self.idx == 0 || self.idx == self.n {
             1
         } else if self.idx == 1 || self.idx == self.n - 1 {
             self.n
