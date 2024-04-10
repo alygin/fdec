@@ -82,6 +82,7 @@ fn main() {
 ```
 
 More examples come with the crate's source code:
+
 - Many ways to create values: [creation.rs](https://github.com/alygin/fdec/tree/master/examples/creation.rs)
 - Compute Fibonacci numbers: [fibonacci.rs](https://github.com/alygin/fdec/tree/master/examples/fibonacci.rs)
 - Calculate square root with high precision: [sqrt.rs](https://github.com/alygin/fdec/tree/master/examples/sqrt.rs)
